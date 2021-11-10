@@ -8,9 +8,11 @@ namespace RefactorGuidanceTool.Controllers.CSharp;
 [Route("CSharp")]
 public class CSharpController : ControllerBase {
 	private readonly ILogger<CSharpController> _logger;
+	private readonly CodeQlBroker _codeQlBroker;
 
-	public CSharpController(ILogger<CSharpController> logger) {
+	public CSharpController(ILogger<CSharpController> logger, CodeQlBroker codeQlBroker) {
 		this._logger = logger;
+		this._codeQlBroker = codeQlBroker;
 	}
 
 	[HttpGet]
@@ -22,6 +24,6 @@ public class CSharpController : ControllerBase {
 	[HttpGet]
 	[Route("CreateDatabase")]
 	public void CreateDatabase(string projectDirectory) {
-		CodeQlBroker.CreateDatabase(projectDirectory, "csharp");
+		this._codeQlBroker.CreateDatabase(projectDirectory, "csharp");
 	}
 }

@@ -2,14 +2,18 @@
 
 namespace RefactorGuidanceTool;
 
-public static class CodeQlBroker {
-	private const string DatabaseOutputDirectory = "C:/Users/Laptop-Justin/Documents/RefactorGuidanceTool/Databases";
+public class CodeQlBroker {
+	private readonly string _databaseOutputDirectory;
 
-	public static void CreateDatabase(string projectDirectory, string language) {
-		EnsureDatabaseDirectoryExist();
+	public CodeQlBroker(string databaseOutputDirectory) {
+		this._databaseOutputDirectory = databaseOutputDirectory;
+	}
+
+	public void CreateDatabase(string projectDirectory, string language) {
+		this.EnsureDatabaseDirectoryExist();
 
 		var databaseName = CreateUniqueDatabaseName(projectDirectory);
-		var databasePath = $"{DatabaseOutputDirectory}/{databaseName}";
+		var databasePath = $"{this._databaseOutputDirectory}/{databaseName}";
 
 		RemoveOldDatabase(databasePath);
 		
@@ -17,7 +21,7 @@ public static class CodeQlBroker {
 
 		var cmd = new Process();
 		cmd.StartInfo.FileName = "codeql";
-		cmd.StartInfo.WorkingDirectory = DatabaseOutputDirectory;
+		cmd.StartInfo.WorkingDirectory = this._databaseOutputDirectory;
 		cmd.StartInfo.Arguments = arguments;
 		cmd.StartInfo.RedirectStandardInput = true;
 		cmd.StartInfo.RedirectStandardOutput = true;
@@ -31,9 +35,13 @@ public static class CodeQlBroker {
 		cmd.WaitForExit();
 	}
 
-	public static void CleanDatabaseDirectory() {
-		if (Directory.Exists(DatabaseOutputDirectory))
-			Directory.Delete(DatabaseOutputDirectory, true);
+	public void CleanDatabaseDirectory() {
+		if (Directory.Exists(this._databaseOutputDirectory))
+			Directory.Delete(this._databaseOutputDirectory, true);
+	}
+	private void EnsureDatabaseDirectoryExist() {
+		if (!Directory.Exists(this._databaseOutputDirectory))
+			Directory.CreateDirectory(this._databaseOutputDirectory);
 	}
 
 	private static void RemoveOldDatabase(string databasePath) {
@@ -44,10 +52,5 @@ public static class CodeQlBroker {
 	private static string CreateUniqueDatabaseName(string projectDirectory) {
 		var databaseName = projectDirectory.Replace(@"\", "_").Replace(@"/", "_");
 		return databaseName;
-	}
-
-	private static void EnsureDatabaseDirectoryExist() {
-		if (!Directory.Exists(DatabaseOutputDirectory))
-			Directory.CreateDirectory(DatabaseOutputDirectory);
 	}
 }

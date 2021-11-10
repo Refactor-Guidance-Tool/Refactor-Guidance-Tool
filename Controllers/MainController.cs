@@ -6,14 +6,16 @@ namespace RefactorGuidanceTool.Controllers;
 [Route("Main")]
 public class MainController : ControllerBase{
 	private readonly ILogger<MainController> _logger;
+	private readonly CodeQlBroker _codeQlBroker;
 
-	public MainController(ILogger<MainController> logger) {
+	public MainController(ILogger<MainController> logger, CodeQlBroker codeQlBroker) {
 		this._logger = logger;
+		this._codeQlBroker = codeQlBroker;
 	}
 	
 	[HttpGet]
 	[Route("CleanDatabaseDirectory")]
 	public void GetPossibleRefactorings() {
-		CodeQlBroker.CleanDatabaseDirectory();
+		this._codeQlBroker.CleanDatabaseDirectory();
 	}
 }

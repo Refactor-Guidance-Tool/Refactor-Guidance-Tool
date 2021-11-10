@@ -1,6 +1,15 @@
+using RefactorGuidanceTool;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+{
+	var databaseOutputDirectory = args[0];
+	var codeQlBroker = new CodeQlBroker(databaseOutputDirectory);
+
+	builder.Services.AddSingleton(codeQlBroker);
+}
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
