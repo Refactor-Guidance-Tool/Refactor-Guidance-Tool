@@ -35,18 +35,28 @@ public class CodeQlBroker {
 		cmd.WaitForExit();
 	}
 
-	public void CleanDatabaseDirectory() {
-		if (Directory.Exists(this._databaseOutputDirectory))
-			Directory.Delete(this._databaseOutputDirectory, true);
+	public int CleanDatabaseDirectory() {
+		if (!Directory.Exists(this._databaseOutputDirectory))
+			return 0;
+		
+		var databaseCount = Directory.GetDirectories(this._databaseOutputDirectory).Length;
+		
+		Directory.Delete(this._databaseOutputDirectory, true);
+
+		return databaseCount;
 	}
 	private void EnsureDatabaseDirectoryExist() {
-		if (!Directory.Exists(this._databaseOutputDirectory))
-			Directory.CreateDirectory(this._databaseOutputDirectory);
+		if (Directory.Exists(this._databaseOutputDirectory))
+			return;
+		
+		Directory.CreateDirectory(this._databaseOutputDirectory);
 	}
 
 	private static void RemoveOldDatabase(string databasePath) {
-		if (Directory.Exists(databasePath))
-			Directory.Delete(databasePath, true);
+		if (!Directory.Exists(databasePath)) 
+			return;
+
+		Directory.Delete(databasePath, true);
 	}
 
 	private static string CreateUniqueDatabaseName(string projectDirectory) {

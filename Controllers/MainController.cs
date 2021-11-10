@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Mvc;
 
 namespace RefactorGuidanceTool.Controllers; 
 
@@ -12,10 +13,21 @@ public class MainController : ControllerBase{
 		this._logger = logger;
 		this._codeQlBroker = codeQlBroker;
 	}
+
+	[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+	public record GetPossibleRefactoringsResponse {
+		public int DatabasesDeletedCount { get; set; } 
+	}
 	
 	[HttpGet]
 	[Route("CleanDatabaseDirectory")]
-	public void GetPossibleRefactorings() {
-		this._codeQlBroker.CleanDatabaseDirectory();
+	public GetPossibleRefactoringsResponse GetPossibleRefactorings() {
+		var databasesDeletedCount = this._codeQlBroker.CleanDatabaseDirectory();
+
+		var response = new GetPossibleRefactoringsResponse() {
+			DatabasesDeletedCount = databasesDeletedCount
+		};
+		
+		return response;
 	}
 }
