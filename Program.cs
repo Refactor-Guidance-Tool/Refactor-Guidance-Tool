@@ -6,7 +6,10 @@ builder.Services.AddControllers();
 
 {
 	var databaseOutputDirectory = args[0];
-	var codeQlBroker = new CodeQlBroker(databaseOutputDirectory);
+	var detectorsDirectory = args[1];
+	var resultsDirectory = args[2];
+
+	var codeQlBroker = new CodeQlBroker(databaseOutputDirectory, detectorsDirectory, resultsDirectory);
 
 	builder.Services.AddSingleton(codeQlBroker);
 }

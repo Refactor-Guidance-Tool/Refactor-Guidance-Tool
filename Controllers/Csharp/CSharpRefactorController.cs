@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections;
+using Microsoft.AspNetCore.Mvc;
 using RefactorGuidanceTool.Models;
 
 namespace RefactorGuidanceTool.Controllers.CSharp;
@@ -7,14 +8,18 @@ namespace RefactorGuidanceTool.Controllers.CSharp;
 [Route("CSharp/Refactor")]
 public class CSharpRefactorController : ControllerBase {
 	private readonly ILogger<CSharpRefactorController> _logger;
+	private readonly CodeQlBroker _codeQlBroker;
 
-	public CSharpRefactorController(ILogger<CSharpRefactorController> logger) {
+	public CSharpRefactorController(ILogger<CSharpRefactorController> logger, CodeQlBroker codeQlBroker) {
 		this._logger = logger;
+		this._codeQlBroker = codeQlBroker;
 	}
 
 	[HttpGet]
 	[Route("RemoveClassAdvice")]
-	public Advice GetAdviceForRemoveClassRefactoring() {
-		return new Advice();
+	public IEnumerable<CodeQlBroker.DetectorResult> GetAdviceForRemoveClassRefactoring(string databasePath, string className) {
+		var detectorResults = this._codeQlBroker.DetectHazardsRemoveClass(databasePath, "csharp", className);
+
+		return detectorResults;
 	}
 }
