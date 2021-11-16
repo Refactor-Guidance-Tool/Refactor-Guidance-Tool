@@ -9,13 +9,19 @@ namespace RefactorGuidanceTool;
 
 public class CodeQlBroker {
 	private readonly string _databaseOutputDirectory;
-	private readonly string _detectorsDirectory;
 	private readonly string _resultsDirectory;
+	private readonly string _detectorsDirectory;
 
-	public CodeQlBroker(string databaseOutputDirectory, string detectorsDirectory, string resultsDirectory) {
-		this._databaseOutputDirectory = databaseOutputDirectory;
+	public CodeQlBroker(string outputDirectory, string detectorsDirectory) {
+		this._databaseOutputDirectory = $"{outputDirectory}/Databases";
+		this._resultsDirectory = $"{outputDirectory}/Results";
 		this._detectorsDirectory = detectorsDirectory;
+	}
+	
+	public CodeQlBroker(string databaseOutputDirectory, string resultsDirectory, string detectorsDirectory) {
+		this._databaseOutputDirectory = databaseOutputDirectory;
 		this._resultsDirectory = resultsDirectory;
+		this._detectorsDirectory = detectorsDirectory;
 	}
 
 	public void CreateDatabase(string projectDirectory, string language) {
