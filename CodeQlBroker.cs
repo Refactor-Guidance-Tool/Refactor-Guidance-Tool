@@ -32,14 +32,12 @@ public class CodeQlBroker {
 	}
 
 	public void CreateDatabase(string projectDirectory, string language) {
-		EnsureDirectoryExists(this._databaseOutputDirectory);
+		Utils.EnsureDirectoryExists(this._databaseOutputDirectory);
 
 		var databaseName = CreateUniqueDatabaseName(projectDirectory);
 		var databasePath = $"{this._databaseOutputDirectory}/{databaseName}";
 
-		var oldDatabaseData = this._databaseDataStore.FindDatabaseByPath(databasePath);
-		if (oldDatabaseData != null)
-			this.RemoveDatabase(oldDatabaseData);
+		this.RemoveDatabase(databasePath);
 
 		var arguments = $"database create --language={language} -s \"{projectDirectory}\" --overwrite {databaseName}";
 		this.RunCodeQl(arguments, this._databaseOutputDirectory);
@@ -74,7 +72,7 @@ public class CodeQlBroker {
 		var output = cmd.StandardOutput.ReadToEnd();
 
 		cmd.WaitForExit();
-		
+
 		return output;
 	}
 
@@ -82,7 +80,7 @@ public class CodeQlBroker {
 		var baseDetectorsDirectory = $"{this._detectorsDirectory}/{language}/Base/RC";
 		var concreteDetectorsDirectory = $"{this._detectorsDirectory}/{language}/Concrete/RC";
 
-		EnsureDirectoryExists(concreteDetectorsDirectory);
+		Utils.EnsureDirectoryExists(concreteDetectorsDirectory);
 
 		foreach (var baseDetectorPath in Directory.EnumerateFiles(baseDetectorsDirectory)) {
 			var baseDetectorSourceCode = File.ReadAllText(baseDetectorPath);
@@ -94,7 +92,8 @@ public class CodeQlBroker {
 			File.WriteAllText(concreteDetectorPath, concreteDetectorSourceCode);
 		}
 
-		var arguments = $"database analyze --format=csv --output=removeClass.csv --rerun {databasePath} {concreteDetectorsDirectory}";
+		var arguments =
+			$"database analyze --format=csv --output=removeClass.csv --rerun {databasePath} {concreteDetectorsDirectory}";
 		this.RunCodeQl(arguments, this._resultsDirectory);
 
 		var config = new CsvConfiguration(CultureInfo.InvariantCulture) {
@@ -112,19 +111,16 @@ public class CodeQlBroker {
 		return this._databaseDataStore.RemoveAll();
 	}
 
+	private void RemoveDatabase(string databasePath) {
+		this._databaseDataStore.Delete(databasePath);
+	}
+
 	private void RemoveDatabase(DatabaseDataStore.DatabaseData databaseData) {
 		this._databaseDataStore.Delete(databaseData);
 	}
 
-	private static void EnsureDirectoryExists(string directory) {
-		if (Directory.Exists(directory))
-			return;
-
-		Directory.CreateDirectory(directory);
-	}
-
 	private static string CreateUniqueDatabaseName(string projectDirectory) {
-		var databaseName = projectDirectory.Replace(@"\", "_").Replace(@"/", "_");
+		var databaseName = projectDirectory.Replace(@"\", "_").Replace(@"/", "_").Replace(@":", "");
 		return databaseName;
 	}
 }

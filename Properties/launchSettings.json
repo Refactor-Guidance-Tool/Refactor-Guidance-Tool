@@ -17,7 +17,8 @@
       "applicationUrl": "https://localhost:7078;http://localhost:5078",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "commandLineArgs": "C:\\Users\\hindr\\Documents\\Refactoring\\Output C:\\Users\\hindr\\Documents\\Refactoring\\Detectors"
     },
     "IIS Express": {
       "commandName": "IISExpress",
