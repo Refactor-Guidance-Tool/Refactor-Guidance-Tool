@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
@@ -12,31 +13,57 @@ public class CodeQlBroker {
 	private readonly string _resultsDirectory;
 	private readonly string _detectorsDirectory;
 
+	private readonly DatabaseDataStore _databaseDataStore;
+
 	public CodeQlBroker(string outputDirectory, string detectorsDirectory) {
 		this._databaseOutputDirectory = $"{outputDirectory}/Databases";
 		this._resultsDirectory = $"{outputDirectory}/Results";
 		this._detectorsDirectory = detectorsDirectory;
+
+		this._databaseDataStore = new DatabaseDataStore(this._databaseOutputDirectory);
 	}
-	
+
 	public CodeQlBroker(string databaseOutputDirectory, string resultsDirectory, string detectorsDirectory) {
 		this._databaseOutputDirectory = databaseOutputDirectory;
 		this._resultsDirectory = resultsDirectory;
 		this._detectorsDirectory = detectorsDirectory;
+
+		this._databaseDataStore = new DatabaseDataStore(this._databaseOutputDirectory);
 	}
 
 	public void CreateDatabase(string projectDirectory, string language) {
-		this.EnsureDatabaseDirectoryExist();
+		EnsureDirectoryExists(this._databaseOutputDirectory);
 
 		var databaseName = CreateUniqueDatabaseName(projectDirectory);
 		var databasePath = $"{this._databaseOutputDirectory}/{databaseName}";
 
-		RemoveOldDatabase(databasePath);
+		var oldDatabaseData = this._databaseDataStore.FindDatabaseByPath(databasePath);
+		if (oldDatabaseData != null)
+			this.RemoveDatabase(oldDatabaseData);
 
 		var arguments = $"database create --language={language} -s \"{projectDirectory}\" --overwrite {databaseName}";
+		this.RunCodeQl(arguments, this._databaseOutputDirectory);
 
+		this._databaseDataStore.Insert(databasePath);
+	}
+
+	// ReSharper disable once ClassNeverInstantiated.Global
+	public record DetectorResult {
+		[Index(0)] public string? DetectorName { get; set; }
+		[Index(1)] public string? DetectorDescription { get; set; }
+		[Index(2)] public string? DetectorType { get; set; }
+		[Index(3)] public string? Message { get; set; }
+		[Index(4)] public string? Source { get; set; }
+		[Index(5)] public string? StartLine { get; set; }
+		[Index(6)] public string? StartChar { get; set; }
+		[Index(7)] public string? EndLine { get; set; }
+		[Index(8)] public string? EndChar { get; set; }
+	}
+
+	private string RunCodeQl(string arguments, string workingDirectory) {
 		var cmd = new Process();
 		cmd.StartInfo.FileName = "codeql";
-		cmd.StartInfo.WorkingDirectory = this._databaseOutputDirectory;
+		cmd.StartInfo.WorkingDirectory = workingDirectory;
 		cmd.StartInfo.Arguments = arguments;
 		cmd.StartInfo.RedirectStandardInput = true;
 		cmd.StartInfo.RedirectStandardOutput = true;
@@ -44,31 +71,18 @@ public class CodeQlBroker {
 		cmd.StartInfo.UseShellExecute = false;
 		cmd.Start();
 
-		// var output = cmd.StandardOutput.ReadToEnd();
-		cmd.StandardOutput.ReadToEnd();
+		var output = cmd.StandardOutput.ReadToEnd();
 
 		cmd.WaitForExit();
-	}
-
-	// ReSharper disable once ClassNeverInstantiated.Global
-	public record DetectorResult {
-		[Index(0)] public string DetectorName { get; set; }
-		[Index(1)] public string DetectorDescription { get; set; }
-		[Index(2)] public string DetectorType { get; set; }
-		[Index(3)] public string Message { get; set; }
-		[Index(4)] public string Source { get; set; }
-		[Index(5)] public string StartLine { get; set; }
-		[Index(6)] public string StartChar { get; set; }
-		[Index(7)] public string EndLine { get; set; }
-		[Index(8)] public string EndChar { get; set; }
+		
+		return output;
 	}
 
 	public IEnumerable<DetectorResult> DetectHazardsRemoveClass(string databasePath, string language, string className) {
 		var baseDetectorsDirectory = $"{this._detectorsDirectory}/{language}/Base/RC";
 		var concreteDetectorsDirectory = $"{this._detectorsDirectory}/{language}/Concrete/RC";
 
-		if (!Directory.Exists(concreteDetectorsDirectory))
-			Directory.CreateDirectory(concreteDetectorsDirectory);
+		EnsureDirectoryExists(concreteDetectorsDirectory);
 
 		foreach (var baseDetectorPath in Directory.EnumerateFiles(baseDetectorsDirectory)) {
 			var baseDetectorSourceCode = File.ReadAllText(baseDetectorPath);
@@ -80,23 +94,8 @@ public class CodeQlBroker {
 			File.WriteAllText(concreteDetectorPath, concreteDetectorSourceCode);
 		}
 
-		var arguments =
-			$"database analyze --format=csv --output=removeClass.csv --rerun {databasePath} {concreteDetectorsDirectory}";
-
-		var cmd = new Process();
-		cmd.StartInfo.FileName = "codeql";
-		cmd.StartInfo.WorkingDirectory = this._resultsDirectory;
-		cmd.StartInfo.Arguments = arguments;
-		cmd.StartInfo.RedirectStandardInput = true;
-		cmd.StartInfo.RedirectStandardOutput = true;
-		cmd.StartInfo.CreateNoWindow = false;
-		cmd.StartInfo.UseShellExecute = false;
-		cmd.Start();
-
-		// var output = cmd.StandardOutput.ReadToEnd();
-		cmd.StandardOutput.ReadToEnd();
-
-		cmd.WaitForExit();
+		var arguments = $"database analyze --format=csv --output=removeClass.csv --rerun {databasePath} {concreteDetectorsDirectory}";
+		this.RunCodeQl(arguments, this._resultsDirectory);
 
 		var config = new CsvConfiguration(CultureInfo.InvariantCulture) {
 			HasHeaderRecord = false,
@@ -109,29 +108,19 @@ public class CodeQlBroker {
 		return detectorResults.ToList();
 	}
 
-	public int CleanDatabaseDirectory() {
-		if (!Directory.Exists(this._databaseOutputDirectory))
-			return 0;
-
-		var databaseCount = Directory.GetDirectories(this._databaseOutputDirectory).Length;
-
-		Directory.Delete(this._databaseOutputDirectory, true);
-
-		return databaseCount;
+	public int RemoveAllDatabases() {
+		return this._databaseDataStore.RemoveAll();
 	}
 
-	private void EnsureDatabaseDirectoryExist() {
-		if (Directory.Exists(this._databaseOutputDirectory))
-			return;
-
-		Directory.CreateDirectory(this._databaseOutputDirectory);
+	private void RemoveDatabase(DatabaseDataStore.DatabaseData databaseData) {
+		this._databaseDataStore.Delete(databaseData);
 	}
 
-	private static void RemoveOldDatabase(string databasePath) {
-		if (!Directory.Exists(databasePath))
+	private static void EnsureDirectoryExists(string directory) {
+		if (Directory.Exists(directory))
 			return;
 
-		Directory.Delete(databasePath, true);
+		Directory.CreateDirectory(directory);
 	}
 
 	private static string CreateUniqueDatabaseName(string projectDirectory) {

@@ -20,9 +20,9 @@ public class MainController : ControllerBase{
 	}
 	
 	[HttpGet]
-	[Route("CleanDatabaseDirectory")]
+	[Route("RemoveAllDatabases")]
 	public GetPossibleRefactoringsResponse GetPossibleRefactorings() {
-		var databasesDeletedCount = this._codeQlBroker.CleanDatabaseDirectory();
+		var databasesDeletedCount = this._codeQlBroker.RemoveAllDatabases();
 
 		var response = new GetPossibleRefactoringsResponse() {
 			DatabasesDeletedCount = databasesDeletedCount
