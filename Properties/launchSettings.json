@@ -18,7 +18,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "commandLineArgs": "C:\\Users\\hindr\\Documents\\Refactoring\\Output C:\\Users\\hindr\\Documents\\Refactoring\\Detectors"
+      "commandLineArgs": "C:\\Users\\hindr\\Documents\\Refactoring\\Output C:\\Users\\hindr\\Documents\\Refactoring\\Refactor-Guidance-Tool\\Detectors"
     },
     "IIS Express": {
       "commandName": "IISExpress",
