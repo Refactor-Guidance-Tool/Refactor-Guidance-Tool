@@ -6,11 +6,14 @@ namespace RefactorGuidanceTool;
 public class DatabaseDataStore {
 	public class DatabaseData {
 		public Guid Uuid { get; set; }
-		public string Path { get; set; }
+		public string DatabasePath { get; set; }
+		
+		public string ProjectPath { get; set;  }
 
-		public DatabaseData(Guid uuid, string path) {
+		public DatabaseData(Guid uuid, string databasePath, string projectPath) {
 			this.Uuid = uuid;
-			this.Path = path;
+			this.DatabasePath = databasePath;
+			this.ProjectPath = projectPath;
 		}
 	}
 
@@ -32,8 +35,8 @@ public class DatabaseDataStore {
 		this.Databases.InsertOne(databaseData);
 	}
 
-	public DatabaseData Insert(string databasePath) {
-		var databaseData = new DatabaseData(Guid.NewGuid(), databasePath);
+	public DatabaseData Insert(string databasePath, string projectPath) {
+		var databaseData = new DatabaseData(Guid.NewGuid(), databasePath, projectPath);
 		this.Insert(databaseData);
 		return databaseData;
 	}
@@ -42,8 +45,12 @@ public class DatabaseDataStore {
 		this.Databases.UpdateOne(databaseData.Uuid, databaseData);
 	}
 
+	public DatabaseData? GetDatabaseData(string databaseUuid) {
+		return this.Databases.Find(databaseUuid).FirstOrDefault();
+	}
+
 	public DatabaseData? FindDatabaseByPath(string databasePath) {
-		return this.Databases.AsQueryable().FirstOrDefault(data => data.Path == databasePath);
+		return this.Databases.AsQueryable().FirstOrDefault(data => data.DatabasePath == databasePath);
 	}
 
 	private void DeleteFromStore(Guid uuid) {
@@ -51,11 +58,11 @@ public class DatabaseDataStore {
 	}
 
 	private void DeleteFromStore(string databasePath) {
-		this.Databases.DeleteMany(data => data.Path == databasePath);
+		this.Databases.DeleteMany(data => data.DatabasePath == databasePath);
 	}
 
 	public void Delete(DatabaseData databaseData) {
-		Utils.SafeDeleteDirectory(databaseData.Path, true);
+		Utils.SafeDeleteDirectory(databaseData.DatabasePath, true);
 		this.DeleteFromStore(databaseData.Uuid);
 	}
 

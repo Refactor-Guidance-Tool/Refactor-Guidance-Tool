@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc;
 using RefactorGuidanceTool.Models;
 
@@ -17,13 +18,23 @@ public class CSharpController : ControllerBase {
 
 	[HttpGet]
 	[Route("PossibleRefactorings")]
-	public IEnumerable<Refactoring> GetPossibleRefactorings(int id) {
+	public IEnumerable<Refactoring> GetPossibleRefactorings(string databaseUuid) {
 		return Array.Empty<Refactoring>();
+	}
+	
+	public record CreateDatabaseResponse {
+		public string DatabaseUuid { get; set; } 
 	}
 
 	[HttpGet]
 	[Route("CreateDatabase")]
-	public void CreateDatabase(string projectDirectory) {
-		this._codeQlBroker.CreateDatabase(projectDirectory, "csharp");
+	public CreateDatabaseResponse CreateDatabase(string projectDirectory) {
+		var databaseUuid = this._codeQlBroker.CreateDatabase(projectDirectory, "csharp");
+
+		var response = new CreateDatabaseResponse() {
+			DatabaseUuid = databaseUuid
+		};
+
+		return response;
 	}
 }

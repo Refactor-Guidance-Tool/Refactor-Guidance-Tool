@@ -1,6 +1,6 @@
-﻿namespace RefactorGuidanceTool; 
+﻿namespace RefactorGuidanceTool;
 
-public class Utils {
+internal static class Utils {
 	public static void EnsureDirectoryExists(string directory) {
 		if (Directory.Exists(directory))
 			return;

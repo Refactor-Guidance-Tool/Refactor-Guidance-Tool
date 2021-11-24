@@ -15,16 +15,16 @@ public class MainController : ControllerBase{
 	}
 
 	[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-	public record GetPossibleRefactoringsResponse {
+	public record RemoveAllDatabasesResponse {
 		public int DatabasesDeletedCount { get; set; } 
 	}
 	
 	[HttpGet]
 	[Route("RemoveAllDatabases")]
-	public GetPossibleRefactoringsResponse GetPossibleRefactorings() {
+	public RemoveAllDatabasesResponse RemoveAllDatabases() {
 		var databasesDeletedCount = this._codeQlBroker.RemoveAllDatabases();
 
-		var response = new GetPossibleRefactoringsResponse() {
+		var response = new RemoveAllDatabasesResponse() {
 			DatabasesDeletedCount = databasesDeletedCount
 		};
 		

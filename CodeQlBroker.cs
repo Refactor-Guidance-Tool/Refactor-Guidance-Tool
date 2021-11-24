@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
@@ -31,7 +29,7 @@ public class CodeQlBroker {
 		this._databaseDataStore = new DatabaseDataStore(this._databaseOutputDirectory);
 	}
 
-	public void CreateDatabase(string projectDirectory, string language) {
+	public string CreateDatabase(string projectDirectory, string language) {
 		Utils.EnsureDirectoryExists(this._databaseOutputDirectory);
 
 		var databaseName = CreateUniqueDatabaseName(projectDirectory);
@@ -42,7 +40,8 @@ public class CodeQlBroker {
 		var arguments = $"database create --language={language} -s \"{projectDirectory}\" --overwrite {databaseName}";
 		this.RunCodeQl(arguments, this._databaseOutputDirectory);
 
-		this._databaseDataStore.Insert(databasePath);
+		var databaseData = this._databaseDataStore.Insert(databasePath, projectDirectory);
+		return databaseData.Uuid.ToString();
 	}
 
 	// ReSharper disable once ClassNeverInstantiated.Global
@@ -76,11 +75,16 @@ public class CodeQlBroker {
 		return output;
 	}
 
-	public IEnumerable<DetectorResult> DetectHazardsRemoveClass(string databasePath, string language, string className) {
-		var baseDetectorsDirectory = $"{this._detectorsDirectory}/{language}/Base/RC";
-		var concreteDetectorsDirectory = $"{this._detectorsDirectory}/{language}/Concrete/RC";
+	public IEnumerable<DetectorResult> DetectHazardsRemoveClass(string databaseUuid, string language, string className) {
+		var databaseData = this._databaseDataStore.GetDatabaseData(databaseUuid);
+		if (databaseData == null)
+			return new List<DetectorResult>();
+		
+		var baseDetectorsDirectory = $"{this._detectorsDirectory}/{language}/Base/RemoveClass";
+		var concreteDetectorsDirectory = $"{this._detectorsDirectory}/{language}/Concrete/RemoveClass";
 
 		Utils.EnsureDirectoryExists(concreteDetectorsDirectory);
+		Utils.EnsureDirectoryExists(this._resultsDirectory);
 
 		foreach (var baseDetectorPath in Directory.EnumerateFiles(baseDetectorsDirectory)) {
 			var baseDetectorSourceCode = File.ReadAllText(baseDetectorPath);
@@ -93,7 +97,7 @@ public class CodeQlBroker {
 		}
 
 		var arguments =
-			$"database analyze --format=csv --output=removeClass.csv --rerun {databasePath} {concreteDetectorsDirectory}";
+			$"database analyze --format=csv --output=removeClass.csv --rerun {databaseData.DatabasePath} {concreteDetectorsDirectory}";
 		this.RunCodeQl(arguments, this._resultsDirectory);
 
 		var config = new CsvConfiguration(CultureInfo.InvariantCulture) {

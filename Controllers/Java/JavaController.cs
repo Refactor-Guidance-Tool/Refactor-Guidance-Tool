@@ -14,7 +14,7 @@ public class JavaController : ControllerBase {
 
 	[HttpGet]
 	[Route("PossibleRefactorings")]
-	public IEnumerable<Refactoring> GetPossibleRefactorings(int id) {
+	public IEnumerable<Refactoring> GetPossibleRefactorings(string databaseUuid) {
 		return Array.Empty<Refactoring>();
 	}
 }

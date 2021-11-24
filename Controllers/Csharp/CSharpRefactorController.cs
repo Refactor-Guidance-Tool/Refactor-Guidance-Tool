@@ -17,8 +17,8 @@ public class CSharpRefactorController : ControllerBase {
 
 	[HttpGet]
 	[Route("RemoveClassAdvice")]
-	public IEnumerable<CodeQlBroker.DetectorResult> GetAdviceForRemoveClassRefactoring(string databasePath, string className) {
-		var detectorResults = this._codeQlBroker.DetectHazardsRemoveClass(databasePath, "csharp", className);
+	public IEnumerable<CodeQlBroker.DetectorResult> GetAdviceForRemoveClassRefactoring(string databaseUuid, string className) {
+		var detectorResults = this._codeQlBroker.DetectHazardsRemoveClass(databaseUuid, "csharp", className);
 
 		return detectorResults;
 	}
