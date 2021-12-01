@@ -29,6 +29,8 @@ public class ProjectController : ControllerBase {
 	[Route("Project")]
 	public IActionResult PostProject(ProjectLanguage projectLanguage, string projectPath) {
 		var project = this._projectFactory.CreateProject(projectLanguage, projectPath);
+		project.UpdateDatabase();
+		
 		this._projectStore.Insert(project);
 
 		return this.Ok(new RegisterProjectResponse(project.Uuid.ToString()));

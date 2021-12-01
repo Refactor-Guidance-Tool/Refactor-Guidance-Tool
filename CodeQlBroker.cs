@@ -61,16 +61,16 @@ public class CodeQlBroker {
 		cmd.StartInfo.FileName = "codeql";
 		cmd.StartInfo.WorkingDirectory = workingDirectory;
 		cmd.StartInfo.Arguments = arguments;
-		cmd.StartInfo.RedirectStandardInput = false;
-		cmd.StartInfo.RedirectStandardOutput = false;
+		cmd.StartInfo.RedirectStandardInput = true;
+		cmd.StartInfo.RedirectStandardOutput = true;
 		cmd.StartInfo.CreateNoWindow = false;
-		cmd.StartInfo.UseShellExecute = true;
+		cmd.StartInfo.UseShellExecute = false;
 		cmd.Start();
 
-		// var output = cmd.StandardOutput.ReadToEnd();
+		//var output = cmd.StandardOutput.ReadToEnd();
 
 		cmd.WaitForExit();
-
+		
 		return string.Empty;
 	}
 

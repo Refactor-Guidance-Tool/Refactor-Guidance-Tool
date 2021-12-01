@@ -13,8 +13,6 @@ public abstract class Project {
 		this.Uuid = uuid;
 		this.ProjectLanguage = projectLanguage;
 		this.ProjectPath = projectPath;
-
-		this.UpdateDatabase();
 	}
 
 	public IReadOnlyList<Refactoring> GetAllRefactorings() {
