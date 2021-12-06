@@ -15,6 +15,7 @@
 
     <ItemGroup>
       <_ContentIncludedByDefault Remove="Output\Databases\databases.json" />
+      <_ContentIncludedByDefault Remove="Output\databases.json" />
     </ItemGroup>
 
 </Project>

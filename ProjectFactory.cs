@@ -1,9 +1,11 @@
-using RefactorGuidanceTool.Models.Project;
+using RefactorGuidanceTool.Models;
+using RefactorGuidanceTool.Models.CSharp;
+using RefactorGuidanceTool.Models.Java;
 
 namespace RefactorGuidanceTool; 
 
 public class ProjectFactory {
-	private readonly CodeQlBroker _codeQlBroker;
+	protected readonly CodeQlBroker _codeQlBroker;
 
 	public ProjectFactory(CodeQlBroker codeQlBroker) {
 		this._codeQlBroker = codeQlBroker;
