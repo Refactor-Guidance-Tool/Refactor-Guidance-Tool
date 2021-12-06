@@ -1,8 +1,12 @@
+using RefactorGuidanceTool.Models.CSharp;
+
 namespace RefactorGuidanceTool.Models;
 
 public abstract class Project {
 	protected readonly CodeQlBroker CodeQlBroker;
 
+	protected Dictionary<RefactoringDTO, Func<Refactoring>> _refactorings;
+	
 	public Guid Uuid { get; }
 	public ProjectLanguage ProjectLanguage { get; }
 	public string ProjectPath { get; }
@@ -15,9 +19,32 @@ public abstract class Project {
 		this.ProjectPath = projectPath;
 	}
 
-	public abstract IReadOnlyList<Refactoring> GetAllRefactorings();
+	protected void PopulateRefactorings(Type attributeType) {
+		this._refactorings = new Dictionary<RefactoringDTO, Func<Refactoring>>();
 
-		public void UpdateDatabase() {
+		var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+		var types = assembly.GetTypes();
+
+		foreach (var type in types) {
+			var attribute = type.GetCustomAttributes(attributeType, true).FirstOrDefault();
+
+			if (attribute == null) continue;
+			
+			var refactoringAttribute = (RefactoringAttribute) attribute;
+
+			var refactoringDto = new RefactoringDTO(refactoringAttribute.Name, refactoringAttribute.Id);
+
+			this._refactorings.Add(refactoringDto, () => {
+				return (Refactoring) type
+					.GetConstructor(new Type[] {typeof(CodeQlBroker)})!
+					.Invoke(new object[] {this.CodeQlBroker});
+			});
+		}
+	}
+	
+	public abstract IReadOnlyList<RefactoringDTO> GetAllRefactorings();
+
+	public void UpdateDatabase() {
 		this.CodeQlBroker.DeleteDatabase(this.Uuid);
 		this.CodeQlBroker.CreateDatabase(this.Uuid, this.ProjectPath, this.ProjectLanguage);
 	}

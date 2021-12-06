@@ -51,9 +51,9 @@ public class ProjectController : ControllerBase {
 		return new GetProjectsResponse(projectUuids);
 	}
 
-	private record GetAllRefactoringsResponse(IReadOnlyList<Refactoring> Refactorings) {
+	private record GetAllRefactoringsResponse(IReadOnlyList<RefactoringDTO> Refactorings) {
 		[Required]
-		public IReadOnlyList<Refactoring> Refactorings { get; } = Refactorings;
+		public IReadOnlyList<RefactoringDTO> Refactorings { get; } = Refactorings;
 	}
 
 	[HttpGet]
@@ -85,6 +85,11 @@ public class ProjectController : ControllerBase {
 
 			return this.Ok();
 		}, projectNotFound => this.NotFound());
+	}
+
+	[HttpGet]
+	public IActionResult Hazards(string projectId, string refactoringId, Dictionary<object, object> arguments) {
+		return null;
 	}
 
 	public record RemoveAllDatabasesResponse {

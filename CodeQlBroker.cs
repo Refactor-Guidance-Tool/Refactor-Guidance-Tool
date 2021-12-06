@@ -112,6 +112,8 @@ public class CodeQlBroker {
 
 		cmd.WaitForExit();
 
+		Console.WriteLine(output);
+		
 		return output;
 	}
 

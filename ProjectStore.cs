@@ -33,12 +33,12 @@ public class ProjectStore {
 	}
 
 	public bool Insert(Project project) {
-		var projectWithSamePath = this.Projects
-			.AsQueryable()
-			.ToList()
-			.FirstOrDefault(projectData => projectData.ProjectPath == project.ProjectPath);
-		if (projectWithSamePath != null)
-			return false;
+		// var projectWithSamePath = this.Projects
+		// 	.AsQueryable()
+		// 	.ToList()
+		// 	.FirstOrDefault(projectData => projectData.ProjectPath == project.ProjectPath);
+		// if (projectWithSamePath != null)
+		// 	return false;
 
 		var projectData = new ProjectData(project);
 		this.Projects.InsertOne(projectData);
