@@ -53,6 +53,47 @@ public class CodeQlBroker {
 		[Index(7)] public string? EndLine { get; set; }
 		[Index(8)] public string? EndChar { get; set; }
 	}
+	
+	public IReadOnlyList<DetectorResult> RunDetectors(Guid uuid, ProjectLanguage language, string detectorsName, Func<string, string> argumentFiller)
+	{
+		var databaseName = uuid.ToString("D");
+		var databasePath = $"{this._databaseOutputDirectory}/{databaseName}";
+		
+		var languageParam = language switch {
+			ProjectLanguage.Java => "java",
+			ProjectLanguage.CSharp => "csharp",
+			_ => throw new Exception()
+		};
+		
+		var baseDetectorsDirectory = $"{this._detectorsDirectory}/{languageParam}/Base/{detectorsName}";
+		var concreteDetectorsDirectory = $"{this._detectorsDirectory}/{languageParam}/Concrete/{detectorsName}";
+		
+		Utils.EnsureDirectoryExists(concreteDetectorsDirectory);
+		Utils.EnsureDirectoryExists(this._resultsDirectory);
+		
+		foreach (var baseDetectorPath in Directory.EnumerateFiles(baseDetectorsDirectory)) {
+			var baseDetectorSourceCode = File.ReadAllText(baseDetectorPath);
+			var concreteDetectorSourceCode = argumentFiller(baseDetectorSourceCode);
+			
+			var detectorFileName = Path.GetFileName(baseDetectorPath);
+			var concreteDetectorPath = $"{concreteDetectorsDirectory}/{detectorFileName}";
+
+			File.WriteAllText(concreteDetectorPath, concreteDetectorSourceCode);
+		}
+		
+		var arguments = $"database analyze --format=csv --output=removeClass.csv --rerun {databasePath} {concreteDetectorsDirectory}";
+		RunCodeQl(arguments, this._resultsDirectory);
+
+		var config = new CsvConfiguration(CultureInfo.InvariantCulture) {
+			HasHeaderRecord = false,
+		};
+		using var reader = new StreamReader($"{this._resultsDirectory}/removeClass.csv");
+		using var csv = new CsvReader(reader, config);
+
+		var detectorResults = csv.GetRecords<DetectorResult>();
+		
+		return detectorResults.ToList();
+	}
 
 	private static string RunCodeQl(string arguments, string workingDirectory) {
 		Utils.EnsureDirectoryExists(workingDirectory);
@@ -61,17 +102,17 @@ public class CodeQlBroker {
 		cmd.StartInfo.FileName = "codeql";
 		cmd.StartInfo.WorkingDirectory = workingDirectory;
 		cmd.StartInfo.Arguments = arguments;
-		cmd.StartInfo.RedirectStandardInput = false;
-		cmd.StartInfo.RedirectStandardOutput = false;
+		cmd.StartInfo.RedirectStandardInput = true;
+		cmd.StartInfo.RedirectStandardOutput = true;
 		cmd.StartInfo.CreateNoWindow = false;
-		cmd.StartInfo.UseShellExecute = true;
+		cmd.StartInfo.UseShellExecute = false;
 		cmd.Start();
 
-		// var output = cmd.StandardOutput.ReadToEnd();
+		var output = cmd.StandardOutput.ReadToEnd();
 
 		cmd.WaitForExit();
 
-		return string.Empty;
+		return output;
 	}
 
 	public void DeleteDatabase(Guid uuid) {
