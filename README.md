@@ -20,7 +20,7 @@ After that run the Docker image, and map the port you want to use to access Swag
 Also make sure to mount the directory of the project you want to refactor to the /app/project directory.
 
 ```sh
-docker run -d -p 1337:80 --name isa-lab/refactor-guidance-tool --rm -v path/to/refactor/project:/app/project refactor-guidance-tool
+docker run -d -p 1337:80 --name refactor-guidance-tool --rm -v path/to/refactor/project:/app/project isa-lab/refactor-guidance-tool
 ```
 
 > Note: `:80` is required to put after the desired port, as port 80 is exposed by default by the Docker image.
