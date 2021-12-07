@@ -3,6 +3,7 @@ using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
+using RefactorGuidanceTool.Models;
 
 namespace RefactorGuidanceTool;
 
@@ -43,15 +44,15 @@ public class CodeQlBroker {
 
 	// ReSharper disable once ClassNeverInstantiated.Global
 	public record DetectorResult {
-		[Index(0)] public string? DetectorName { get; set; }
-		[Index(1)] public string? DetectorDescription { get; set; }
-		[Index(2)] public string? DetectorType { get; set; }
-		[Index(3)] public string? Message { get; set; }
-		[Index(4)] public string? Source { get; set; }
-		[Index(5)] public string? StartLine { get; set; }
-		[Index(6)] public string? StartChar { get; set; }
-		[Index(7)] public string? EndLine { get; set; }
-		[Index(8)] public string? EndChar { get; set; }
+		[Index(0)] public string DetectorName { get; set; }
+		[Index(1)] public string DetectorDescription { get; set; }
+		[Index(2)] public string DetectorType { get; set; }
+		[Index(3)] public string Message { get; set; }
+		[Index(4)] public string Source { get; set; }
+		[Index(5)] public int StartLine { get; set; }
+		[Index(6)] public int StartChar { get; set; }
+		[Index(7)] public int EndLine { get; set; }
+		[Index(8)] public int EndChar { get; set; }
 	}
 	
 	public IReadOnlyList<DetectorResult> RunDetectors(Guid uuid, ProjectLanguage language, string detectorsName, Func<string, string> argumentFiller)
@@ -122,5 +123,41 @@ public class CodeQlBroker {
 		var databasePath = $"{this._databaseOutputDirectory}/{databaseName}";
 
 		Utils.SafeDeleteDirectory(databasePath);
+	}
+
+	public IReadOnlyList<CodeElement> GetCodeElements(Guid uuid, ProjectLanguage language) {
+		var databaseName = uuid.ToString("D");
+		var databasePath = $"{this._databaseOutputDirectory}/{databaseName}";
+		
+		var languageParam = language switch {
+			ProjectLanguage.Java => "java",
+			ProjectLanguage.CSharp => "csharp",
+			_ => throw new Exception()
+		};
+		
+		Utils.EnsureDirectoryExists(this._resultsDirectory);
+		
+		var astDetectorsDirectory = $"{this._detectorsDirectory}/{languageParam}/AST";
+		
+		var arguments = $"database analyze --format=csv --output=ast.csv --rerun {databasePath} {astDetectorsDirectory}";
+		RunCodeQl(arguments, this._resultsDirectory);
+
+		var config = new CsvConfiguration(CultureInfo.InvariantCulture) {
+			HasHeaderRecord = false,
+		};
+		using var reader = new StreamReader($"{this._resultsDirectory}/ast.csv");
+		using var csv = new CsvReader(reader, config);
+
+		var detectorResults = csv.GetRecords<DetectorResult>();
+
+		var codeElements = detectorResults.Select(result => new CodeElement(
+			result.Message,
+			new Position(result.StartLine, result.StartChar, result.EndLine, result.EndChar),
+			result.DetectorDescription,
+			result.Source
+		)).ToList();
+
+
+		return codeElements;
 	}
 }

@@ -92,6 +92,24 @@ public class ProjectController : ControllerBase {
 		return null;
 	}
 
+	private record GetCodeElementsResponse(IReadOnlyList<CodeElement> CodeElements) {
+		[Required]
+		public IReadOnlyList<CodeElement> CodeElements { get; } = CodeElements;
+	}
+	
+	[HttpGet]
+	[ProducesResponseType(StatusCodes.Status200OK, Type=typeof(GetCodeElementsResponse))]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
+	[Route("CodeElements")]
+	public IActionResult CodeElements(string projectId) {
+		var projectResult = this._projectStore.GetProjectByUuid(projectId);
+
+		return projectResult.Match<IActionResult>(project => {
+			var codeElements = project.GetCodeElements();
+			return this.Ok(new GetCodeElementsResponse(codeElements));
+		}, projectNotFound => this.NotFound());
+	}
+
 	public record RemoveAllDatabasesResponse {
 		public int DatabasesDeletedCount { get; set; }
 	}

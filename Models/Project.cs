@@ -41,7 +41,11 @@ public abstract class Project {
 			});
 		}
 	}
-	
+
+	public IReadOnlyList<CodeElement> GetCodeElements() {
+		return this.CodeQlBroker.GetCodeElements(this.Uuid, this.ProjectLanguage);
+	}
+
 	public abstract IReadOnlyList<RefactoringDTO> GetAllRefactorings();
 
 	public void UpdateDatabase() {
