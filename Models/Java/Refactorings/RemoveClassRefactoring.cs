@@ -2,16 +2,19 @@
 
 [JavaRefactoring("Remove Class", typeof(RemoveClassRefactoring))]
 public class RemoveClassRefactoring : Refactoring {
-	public RemoveClassRefactoring(CodeQlBroker codeQlBroker, Project project) : base(codeQlBroker, project) { }
-	
-	public override IReadOnlyList<Hazard> GetHazards() {
-		this.CodeQlBroker.RunDetectors(this.project.Uuid, this.project.ProjectLanguage, "RemoveClass", s => {
-			
-			
-			return s;
-		});
+	public RemoveClassRefactoring(CodeQlBroker codeQlBroker) : base(codeQlBroker) { }
 
-		return null;
+	public override IReadOnlyList<Hazard> GetHazards(Project project, Dictionary<string, string> settings) {
+		var className = settings["className"];
+		var packageName = settings["packageName"];
+		
+		var detectorResults = this.CodeQlBroker.RunDetectors(project.Uuid, project.ProjectLanguage, "RemoveClass", s => s
+				.Replace("$CLASS_PACKAGE", packageName)
+				.Replace("$CLASS", className))
+			.Select(result => new Hazard(result))
+			.ToList();
+
+		return detectorResults;
 	}
 
 	public override Verdict GetVerdict() {

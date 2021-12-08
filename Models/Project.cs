@@ -48,6 +48,14 @@ public abstract class Project {
 
 	public abstract IReadOnlyList<RefactoringDTO> GetAllRefactorings();
 
+	public Refactoring GetRefactoring(string refactoringId) {
+		var refactoringDto = this._refactorings.Keys.FirstOrDefault(dto => dto.Id == refactoringId)!;
+		var creator = this._refactorings[refactoringDto];
+		var refactoring = creator();
+
+		return refactoring;
+	}
+	
 	public void UpdateDatabase() {
 		this.CodeQlBroker.DeleteDatabase(this.Uuid);
 		this.CodeQlBroker.CreateDatabase(this.Uuid, this.ProjectPath, this.ProjectLanguage);

@@ -5,14 +5,14 @@ using RefactorGuidanceTool.Models;
 namespace RefactorGuidanceTool.Controllers;
 
 [ApiController]
-[Route("Project")]
-public class ProjectController : ControllerBase {
-	private readonly ILogger<ProjectController> _logger;
+[Route("Projects")]
+public class ProjectsController : ControllerBase {
+	private readonly ILogger<ProjectsController> _logger;
 
 	private readonly ProjectFactory _projectFactory;
 	private readonly ProjectStore _projectStore;
 
-	public ProjectController(ILogger<ProjectController> logger, ProjectFactory projectFactory,
+	public ProjectsController(ILogger<ProjectsController> logger, ProjectFactory projectFactory,
 		ProjectStore projectStore) {
 		this._logger = logger;
 
@@ -26,8 +26,8 @@ public class ProjectController : ControllerBase {
 	}
 
 	[HttpPost]
-	[Route("Project")]
-	public IActionResult PostProject(ProjectLanguage projectLanguage, string projectPath) {
+	[Route("")]
+	public IActionResult PostProject([Required]ProjectLanguage projectLanguage, [Required]string projectPath) {
 		var project = this._projectFactory.CreateProject(projectLanguage, projectPath);
 		project.UpdateDatabase();
 		
@@ -42,7 +42,7 @@ public class ProjectController : ControllerBase {
 	}
 
 	[HttpGet]
-	[Route("Projects")]
+	[Route("")]
 	public GetProjectsResponse GetProjects() {
 		var projectUuids = this._projectStore.GetProjects()
 			.Select(p => p.Uuid.ToString())
@@ -59,9 +59,9 @@ public class ProjectController : ControllerBase {
 	[HttpGet]
 	[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetAllRefactoringsResponse))]
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
-	[Route("AllRefactorings")]
-	public IActionResult GetAllRefactorings(string uuid) {
-		var projectResult = this._projectStore.GetProjectByUuid(uuid);
+	[Route("{projectId}/allRefactorings")]
+	public IActionResult GetAllRefactorings(string projectId) {
+		var projectResult = this._projectStore.GetProjectByUuid(projectId);
 
 		return projectResult.Match<IActionResult>(
 			project => {
@@ -75,9 +75,9 @@ public class ProjectController : ControllerBase {
 	[HttpDelete]
 	[ProducesResponseType(StatusCodes.Status200OK)]
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
-	[Route("Project")]
-	public IActionResult DeleteProject(string uuid) {
-		var projectResult = this._projectStore.GetProjectByUuid(uuid);
+	[Route("{projectId}")]
+	public IActionResult DeleteProject(string projectId) {
+		var projectResult = this._projectStore.GetProjectByUuid(projectId);
 
 		return projectResult.Match<IActionResult>(project => {
 			this._projectStore.Delete(project);
@@ -87,8 +87,25 @@ public class ProjectController : ControllerBase {
 		}, projectNotFound => this.NotFound());
 	}
 
-	[HttpGet]
-	public IActionResult Hazards(string projectId, string refactoringId, Dictionary<object, object> arguments) {
+	private record GetHazardsResponse(IReadOnlyList<Hazard> Hazards) {
+		[Required]
+		public IReadOnlyList<Hazard> Hazards { get; } = Hazards;
+	}
+	
+	[HttpPost]
+	[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetHazardsResponse))]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
+	[Route("{projectId}/hazards")]
+	public IActionResult GetHazards(string projectId, [Required]string refactoringId, Dictionary<string, string> settings) {
+		var projectResult = this._projectStore.GetProjectByUuid(projectId);
+		
+		return projectResult.Match<IActionResult>(project => {
+			var refactoring = project.GetRefactoring(refactoringId);
+			var hazards = refactoring.GetHazards(project, settings);
+			
+			return this.Ok(hazards);
+		}, projectNotFound => this.NotFound());
+		
 		return null;
 	}
 
@@ -100,17 +117,13 @@ public class ProjectController : ControllerBase {
 	[HttpGet]
 	[ProducesResponseType(StatusCodes.Status200OK, Type=typeof(GetCodeElementsResponse))]
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
-	[Route("CodeElements")]
-	public IActionResult CodeElements(string projectId) {
+	[Route("{projectId}/codeElements")]
+	public IActionResult GetCodeElements(string projectId) {
 		var projectResult = this._projectStore.GetProjectByUuid(projectId);
 
 		return projectResult.Match<IActionResult>(project => {
 			var codeElements = project.GetCodeElements();
 			return this.Ok(new GetCodeElementsResponse(codeElements));
 		}, projectNotFound => this.NotFound());
-	}
-
-	public record RemoveAllDatabasesResponse {
-		public int DatabasesDeletedCount { get; set; }
 	}
 }
