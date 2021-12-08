@@ -1,4 +1,6 @@
-﻿namespace RefactorGuidanceTool.Models;
+﻿using RefactorGuidanceTool.Models.Settings;
+
+namespace RefactorGuidanceTool.Models;
 
 public abstract class Refactoring {
 	protected CodeQlBroker CodeQlBroker;
@@ -10,9 +12,11 @@ public abstract class Refactoring {
 	}
 	
 	public abstract IReadOnlyList<Hazard> GetHazards(Project project, Dictionary<string, string> settings);
-	
+
+	public abstract IReadOnlyList<Setting> GetSettings();
+
 	public abstract Verdict GetVerdict();
-	
+
 	public Guid GetGuid() {
 		return this.id;
 	}

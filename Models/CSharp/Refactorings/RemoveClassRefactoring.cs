@@ -1,4 +1,6 @@
-﻿namespace RefactorGuidanceTool.Models.CSharp.Refactorings;
+﻿using RefactorGuidanceTool.Models.Settings;
+
+namespace RefactorGuidanceTool.Models.CSharp.Refactorings;
 
 [CSharpRefactoring("Remove Class", typeof(RemoveClassRefactoring))]
 public class RemoveClassRefactoring : Refactoring {
@@ -13,6 +15,12 @@ public class RemoveClassRefactoring : Refactoring {
 			.ToList();
 
 		return detectorResults;
+	}
+
+	public override IReadOnlyList<Setting> GetSettings() {
+		return new List<Setting>() {
+			new SubjectSetting("Class to remove"),
+		};
 	}
 
 	public override Verdict GetVerdict() {

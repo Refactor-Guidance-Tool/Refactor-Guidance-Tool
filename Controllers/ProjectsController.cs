@@ -59,8 +59,8 @@ public class ProjectsController : ControllerBase {
 	[HttpGet]
 	[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetAllRefactoringsResponse))]
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
-	[Route("{projectId}/allRefactorings")]
-	public IActionResult GetAllRefactorings(string projectId) {
+	[Route("{projectId}/refactorings")]
+	public IActionResult GetRefactorings(string projectId) {
 		var projectResult = this._projectStore.GetProjectByUuid(projectId);
 
 		return projectResult.Match<IActionResult>(
@@ -86,29 +86,7 @@ public class ProjectsController : ControllerBase {
 			return this.Ok();
 		}, projectNotFound => this.NotFound());
 	}
-
-	private record GetHazardsResponse(IReadOnlyList<Hazard> Hazards) {
-		[Required]
-		public IReadOnlyList<Hazard> Hazards { get; } = Hazards;
-	}
 	
-	[HttpPost]
-	[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetHazardsResponse))]
-	[ProducesResponseType(StatusCodes.Status404NotFound)]
-	[Route("{projectId}/hazards")]
-	public IActionResult GetHazards(string projectId, [Required]string refactoringId, Dictionary<string, string> settings) {
-		var projectResult = this._projectStore.GetProjectByUuid(projectId);
-		
-		return projectResult.Match<IActionResult>(project => {
-			var refactoring = project.GetRefactoring(refactoringId);
-			var hazards = refactoring.GetHazards(project, settings);
-			
-			return this.Ok(hazards);
-		}, projectNotFound => this.NotFound());
-		
-		return null;
-	}
-
 	private record GetCodeElementsResponse(IReadOnlyList<CodeElement> CodeElements) {
 		[Required]
 		public IReadOnlyList<CodeElement> CodeElements { get; } = CodeElements;
