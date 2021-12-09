@@ -6,9 +6,11 @@ namespace RefactorGuidanceTool;
 
 public class ProjectFactory {
 	protected readonly CodeQlBroker _codeQlBroker;
+	protected readonly Dictionary<ProjectLanguage, RefactoringProvider> _refactoringProviders;
 
-	public ProjectFactory(CodeQlBroker codeQlBroker) {
+	public ProjectFactory(CodeQlBroker codeQlBroker, Dictionary<ProjectLanguage, RefactoringProvider> _refactoringProviders) {
 		this._codeQlBroker = codeQlBroker;
+		this._refactoringProviders = _refactoringProviders;
 	}
 	
 	public Project CreateProject(ProjectLanguage projectLanguage, string projectPath) {

@@ -5,8 +5,4 @@ public class CSharpProject : Project {
 		ProjectLanguage.CSharp, projectPath) {
 		this.PopulateRefactorings(typeof(CSharpRefactoringAttribute));
 	}
-
-	public override IReadOnlyList<RefactoringDTO> GetAllRefactorings() {
-		return this._refactorings.Keys.ToList();
-	}
 }

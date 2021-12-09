@@ -7,8 +7,4 @@ public class JavaProject : Project {
 		ProjectLanguage.Java, projectPath) {
 		this.PopulateRefactorings(typeof(JavaRefactoringAttribute));
 	}
-
-	public override IReadOnlyList<RefactoringDTO> GetAllRefactorings() {
-		return this._refactorings.Keys.ToList();
-	}
 }

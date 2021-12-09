@@ -1,5 +1,3 @@
-using RefactorGuidanceTool.Models.CSharp;
-
 namespace RefactorGuidanceTool.Models;
 
 public abstract class Project {
@@ -44,16 +42,6 @@ public abstract class Project {
 
 	public IReadOnlyList<CodeElement> GetCodeElements() {
 		return this.CodeQlBroker.GetCodeElements(this.Uuid, this.ProjectLanguage);
-	}
-
-	public abstract IReadOnlyList<RefactoringDTO> GetAllRefactorings();
-
-	public Refactoring GetRefactoring(string refactoringId) {
-		var refactoringDto = this._refactorings.Keys.FirstOrDefault(dto => dto.Id == refactoringId)!;
-		var creator = this._refactorings[refactoringDto];
-		var refactoring = creator();
-
-		return refactoring;
 	}
 	
 	public void UpdateDatabase() {

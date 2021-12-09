@@ -9,13 +9,15 @@ namespace RefactorGuidanceTool.Controllers;
 public class ProjectsController : ControllerBase {
 	private readonly ILogger<ProjectsController> _logger;
 
+	private readonly Dictionary<ProjectLanguage, RefactoringProvider> _refactoringProviders;
 	private readonly ProjectFactory _projectFactory;
 	private readonly ProjectStore _projectStore;
 
-	public ProjectsController(ILogger<ProjectsController> logger, ProjectFactory projectFactory,
+	public ProjectsController(ILogger<ProjectsController> logger, Dictionary<ProjectLanguage, RefactoringProvider> refactoringProviders, ProjectFactory projectFactory,
 		ProjectStore projectStore) {
 		this._logger = logger;
 
+		this._refactoringProviders = refactoringProviders;
 		this._projectFactory = projectFactory;
 		this._projectStore = projectStore;
 	}
@@ -65,7 +67,8 @@ public class ProjectsController : ControllerBase {
 
 		return projectResult.Match<IActionResult>(
 			project => {
-				var refactorings = project.GetAllRefactorings();
+				var refactoringProvider = this._refactoringProviders[project.ProjectLanguage];
+				var refactorings = refactoringProvider.GetRefactorings();
 
 				return this.Ok(new GetAllRefactoringsResponse(refactorings));
 			},
