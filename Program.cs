@@ -5,6 +5,18 @@ using RefactorGuidanceTool.Models.Java;
 
 var builder = WebApplication.CreateBuilder(args);
 
+string _policyName = "CorsPolicy";
+
+builder.Services.AddCors(opt =>
+{
+	opt.AddPolicy(name: _policyName, builder =>
+	{
+		builder.AllowAnyOrigin()
+			.AllowAnyHeader()
+			.AllowAnyMethod();
+	});
+});
+
 builder.Services.AddControllers();
 
 {
@@ -38,6 +50,8 @@ var app = builder.Build();
 //}
 
 //app.UseHttpsRedirection();
+
+app.UseCors(_policyName);
 
 app.UseAuthorization();
 
