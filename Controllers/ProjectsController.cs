@@ -118,11 +118,13 @@ public class ProjectsController : ControllerBase {
 	[HttpGet]
 	[ProducesResponseType(StatusCodes.Status200OK, Type=typeof(GetCodeElementsResponse))]
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
-	[Route("{projectId}/codeElements")]
+	[Route("{projectId}/CodeElements")]
 	public IActionResult GetCodeElements(string projectId, int offset, int limit, string nameFilter, string typeFilter) {
 		var projectResult = this._projectStore.GetProjectByUuid(projectId);
 
 		var allowList = new HashSet<string>(typeFilter.Split(','));
+
+		nameFilter = nameFilter[1..];
 		
 		return projectResult.Match<IActionResult>(project => {
 			var codeElements = project.GetCodeElements();
@@ -131,6 +133,27 @@ public class ProjectsController : ControllerBase {
 				.Where(element => nameFilter == string.Empty || element.Name.ToLower().Contains(nameFilter.ToLower())).ToList();
 			var selectedCodeElements = filteredCodeElements.Skip(offset).Take(limit).ToList();
 			return this.Ok(new GetCodeElementsResponse(selectedCodeElements, Math.Max(0, filteredCodeElements.Count - offset - limit)));
+		}, projectNotFound => this.NotFound());
+	}
+	
+	private record GetCodeElementTypesResponse(IReadOnlyList<string> CodeElementTypes) {
+		[Required]
+		public IReadOnlyList<string> CodeElementTypes { get; } = CodeElementTypes;
+	}
+	
+	[HttpGet]
+	[ProducesResponseType(StatusCodes.Status200OK, Type=typeof(GetCodeElementTypesResponse))]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
+	[Route("{projectId}/CodeElementTypes")]
+	public IActionResult GetCodeElementTypes(string projectId) {
+		var projectResult = this._projectStore.GetProjectByUuid(projectId);
+
+		return projectResult.Match<IActionResult>(project => {
+			var types = new List<string>() {
+				"Class",
+				"Interface"
+			};
+			return this.Ok(new GetCodeElementTypesResponse(types));
 		}, projectNotFound => this.NotFound());
 	}
 	
