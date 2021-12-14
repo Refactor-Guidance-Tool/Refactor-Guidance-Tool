@@ -16,14 +16,14 @@ public class ProjectsController : ControllerBase {
 	private readonly CodeElementCache _codeElementCache;
 
 	public ProjectsController(ILogger<ProjectsController> logger, Dictionary<ProjectLanguage, RefactoringProvider> refactoringProviders, ProjectFactory projectFactory,
-		ProjectStore projectStore) {
+		ProjectStore projectStore, CodeElementCache codeElementCache) {
 		this._logger = logger;
 
 		this._refactoringProviders = refactoringProviders;
 		this._projectFactory = projectFactory;
 		this._projectStore = projectStore;
 
-		this._codeElementCache = new CodeElementCache();
+		this._codeElementCache = codeElementCache;
 	}
 
 	private record RegisterProjectResponse(string ProjectUuid) {

@@ -37,6 +37,9 @@ builder.Services.AddControllers();
 
 	var projectStore = new ProjectStore(projectFactory, outputDirectory);
 	builder.Services.AddSingleton(projectStore);
+
+	var codeElementCache = new CodeElementCache();
+	builder.Services.AddSingleton(codeElementCache);
 }
 
 builder.Services.AddEndpointsApiExplorer();
