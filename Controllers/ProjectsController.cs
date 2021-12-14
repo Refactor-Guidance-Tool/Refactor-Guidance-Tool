@@ -159,10 +159,8 @@ public class ProjectsController : ControllerBase {
 		var projectResult = this._projectStore.GetProjectByUuid(projectId);
 
 		return projectResult.Match<IActionResult>(project => {
-			var types = new List<string>() {
-				"Class",
-				"Interface"
-			};
+			var types = project.GetCodeElementTypes();
+			
 			return this.Ok(new GetCodeElementTypesResponse(types));
 		}, projectNotFound => this.NotFound());
 	}

@@ -43,7 +43,11 @@ public abstract class Project {
 	public IReadOnlyList<CodeElement> GetCodeElements() {
 		return this.CodeQlBroker.GetCodeElements(this.Uuid, this.ProjectLanguage);
 	}
-	
+
+	public IReadOnlyList<string> GetCodeElementTypes() {
+		return this.CodeQlBroker.GetCodeElementTypes(this.ProjectLanguage);
+	}
+
 	public void UpdateDatabase() {
 		this.CodeQlBroker.DeleteDatabase(this.Uuid);
 		this.CodeQlBroker.CreateDatabase(this.Uuid, this.ProjectPath, this.ProjectLanguage);

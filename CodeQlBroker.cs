@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
@@ -169,5 +170,32 @@ public class CodeQlBroker {
 
 
 		return codeElements;
+	}
+
+	public IReadOnlyList<string> GetCodeElementTypes(ProjectLanguage language) {
+		var languageParam = language switch {
+			ProjectLanguage.Java => "java",
+			ProjectLanguage.CSharp => "csharp",
+			_ => throw new Exception()
+		};
+		
+		var astDetectorsDirectory = $"{this._detectorsDirectory}/{languageParam}/AST";
+
+		var detectors = Directory.GetFiles(astDetectorsDirectory);
+
+		var types = new List<string>();
+		
+		foreach (var detector in detectors)
+		{
+			var contents = File.ReadAllText(detector);
+			var rx = new Regex("(\\* @description )(\\S*)");
+			var match = rx.Match(contents);
+
+			var type = match.Groups[2].Value;
+
+			types.Add(type);
+		}
+		
+		return types;
 	}
 }
