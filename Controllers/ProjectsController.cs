@@ -133,8 +133,10 @@ public class ProjectsController : ControllerBase {
 		nameFilter = nameFilter[1..];
 		
 		return projectResult.Match<IActionResult>(project => {
-			if (!this._codeElementCache.TryGet(project.Uuid, out var codeElements))
+			if (!this._codeElementCache.TryGet(project.Uuid, out var codeElements)) {
 				codeElements = project.GetCodeElements();
+				this._codeElementCache.Register(project.Uuid, codeElements);
+			}
 
 			var filteredCodeElements = codeElements
 				.Where(element => allowList.Contains(element.Type))
@@ -174,6 +176,8 @@ public class ProjectsController : ControllerBase {
 
 		return projectResult.Match<IActionResult>(project => {
 			project.UpdateDatabase();
+			this._codeElementCache.Invalidate(project.Uuid);
+			
 			return this.Ok();
 		}, projectNotFound => this.NotFound());
 	}
