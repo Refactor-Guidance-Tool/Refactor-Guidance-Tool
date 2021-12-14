@@ -13,6 +13,8 @@ public class ProjectsController : ControllerBase {
 	private readonly ProjectFactory _projectFactory;
 	private readonly ProjectStore _projectStore;
 
+	private readonly CodeElementCache _codeElementCache;
+
 	public ProjectsController(ILogger<ProjectsController> logger, Dictionary<ProjectLanguage, RefactoringProvider> refactoringProviders, ProjectFactory projectFactory,
 		ProjectStore projectStore) {
 		this._logger = logger;
@@ -20,6 +22,8 @@ public class ProjectsController : ControllerBase {
 		this._refactoringProviders = refactoringProviders;
 		this._projectFactory = projectFactory;
 		this._projectStore = projectStore;
+
+		this._codeElementCache = new CodeElementCache();
 	}
 
 	private record RegisterProjectResponse(string ProjectUuid) {
@@ -101,6 +105,8 @@ public class ProjectsController : ControllerBase {
 		var projectResult = this._projectStore.GetProjectByUuid(projectId);
 
 		return projectResult.Match<IActionResult>(project => {
+			this._codeElementCache.Invalidate(project.Uuid);
+			
 			this._projectStore.Delete(project);
 			project.Delete();
 
@@ -118,7 +124,7 @@ public class ProjectsController : ControllerBase {
 	[HttpGet]
 	[ProducesResponseType(StatusCodes.Status200OK, Type=typeof(GetCodeElementsResponse))]
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
-	[Route("{projectId}/CodeElements")]
+	[Route("{projectId}/codeElements")]
 	public IActionResult GetCodeElements(string projectId, int offset, int limit, string nameFilter, string typeFilter) {
 		var projectResult = this._projectStore.GetProjectByUuid(projectId);
 
@@ -127,7 +133,9 @@ public class ProjectsController : ControllerBase {
 		nameFilter = nameFilter[1..];
 		
 		return projectResult.Match<IActionResult>(project => {
-			var codeElements = project.GetCodeElements();
+			if (!this._codeElementCache.TryGet(project.Uuid, out var codeElements))
+				codeElements = project.GetCodeElements();
+
 			var filteredCodeElements = codeElements
 				.Where(element => allowList.Contains(element.Type))
 				.Where(element => nameFilter == string.Empty || element.Name.ToLower().Contains(nameFilter.ToLower())).ToList();
@@ -144,7 +152,7 @@ public class ProjectsController : ControllerBase {
 	[HttpGet]
 	[ProducesResponseType(StatusCodes.Status200OK, Type=typeof(GetCodeElementTypesResponse))]
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
-	[Route("{projectId}/CodeElementTypes")]
+	[Route("{projectId}/codeElementTypes")]
 	public IActionResult GetCodeElementTypes(string projectId) {
 		var projectResult = this._projectStore.GetProjectByUuid(projectId);
 
