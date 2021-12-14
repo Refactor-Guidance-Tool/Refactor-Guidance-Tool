@@ -38,11 +38,29 @@ public class ProjectsController : ControllerBase {
 		return this.Ok(new RegisterProjectResponse(project.Uuid.ToString()));
 	}
 
+	public record GetProjectResponse(string Path, ProjectLanguage Language) {
+		[Required]
+		public string Path { get; } = Path;
+		public ProjectLanguage Language { get; } = Language;
+	}
+
+	[HttpGet]
+	[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetProjectResponse))]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
+	[Route("{projectId}")]
+	public IActionResult GetProject(string projectId) {
+		var projectResult = this._projectStore.GetProjectByUuid(projectId);
+
+		return projectResult.Match<IActionResult>(
+			project => this.Ok(new GetProjectResponse(project.ProjectPath, project.ProjectLanguage)),
+			projectNotFound => this.NotFound());
+	}
+	
 	public record GetProjectsResponse(IReadOnlyList<string> ProjectUuids) {
 		[Required]
 		public IReadOnlyList<string> ProjectUuids { get; } = ProjectUuids;
 	}
-
+		
 	[HttpGet]
 	[Route("")]
 	public GetProjectsResponse GetProjects() {
@@ -90,21 +108,42 @@ public class ProjectsController : ControllerBase {
 		}, projectNotFound => this.NotFound());
 	}
 	
-	private record GetCodeElementsResponse(IReadOnlyList<CodeElement> CodeElements) {
+	private record GetCodeElementsResponse(IReadOnlyList<CodeElement> CodeElements, int Remaining) {
 		[Required]
 		public IReadOnlyList<CodeElement> CodeElements { get; } = CodeElements;
+
+		[Required] public int Remaining { get; } = Remaining;
 	}
 	
 	[HttpGet]
 	[ProducesResponseType(StatusCodes.Status200OK, Type=typeof(GetCodeElementsResponse))]
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
 	[Route("{projectId}/codeElements")]
-	public IActionResult GetCodeElements(string projectId) {
+	public IActionResult GetCodeElements(string projectId, int offset, int limit, string nameFilter, string typeFilter) {
+		var projectResult = this._projectStore.GetProjectByUuid(projectId);
+
+		var allowList = new HashSet<string>(typeFilter.Split(','));
+		
+		return projectResult.Match<IActionResult>(project => {
+			var codeElements = project.GetCodeElements();
+			var filteredCodeElements = codeElements
+				.Where(element => allowList.Contains(element.Type))
+				.Where(element => nameFilter == string.Empty || element.Name.ToLower().Contains(nameFilter.ToLower())).ToList();
+			var selectedCodeElements = filteredCodeElements.Skip(offset).Take(limit).ToList();
+			return this.Ok(new GetCodeElementsResponse(selectedCodeElements, Math.Max(0, filteredCodeElements.Count - offset - limit)));
+		}, projectNotFound => this.NotFound());
+	}
+	
+	[HttpPatch]
+	[ProducesResponseType(StatusCodes.Status200OK)]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
+	[Route("{projectId}")]
+	public IActionResult PatchProject(string projectId) {
 		var projectResult = this._projectStore.GetProjectByUuid(projectId);
 
 		return projectResult.Match<IActionResult>(project => {
-			var codeElements = project.GetCodeElements();
-			return this.Ok(new GetCodeElementsResponse(codeElements));
+			project.UpdateDatabase();
+			return this.Ok();
 		}, projectNotFound => this.NotFound());
 	}
 }

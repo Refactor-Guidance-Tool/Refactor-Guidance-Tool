@@ -107,12 +107,22 @@ public class CodeQlBroker {
 		cmd.StartInfo.RedirectStandardOutput = true;
 		cmd.StartInfo.CreateNoWindow = false;
 		cmd.StartInfo.UseShellExecute = false;
+
+		cmd.OutputDataReceived += (sender, args) => {
+			var str = args.Data;
+			Console.WriteLine("Data: " + str);
+		};
+		cmd.ErrorDataReceived += (sender, args) => {
+			var str = args.Data;
+			Console.WriteLine("Error: " + str);
+		};
 		cmd.Start();
 
+
 		var output = cmd.StandardOutput.ReadToEnd();
-
 		cmd.WaitForExit();
-
+		
+		Console.WriteLine("Here's all the output:");
 		Console.WriteLine(output);
 		
 		return output;
@@ -122,7 +132,7 @@ public class CodeQlBroker {
 		var databaseName = uuid.ToString("D");
 		var databasePath = $"{this._databaseOutputDirectory}/{databaseName}";
 
-		Utils.SafeDeleteDirectory(databasePath);
+		Utils.SafeDeleteDirectory(databasePath, true);
 	}
 
 	public IReadOnlyList<CodeElement> GetCodeElements(Guid uuid, ProjectLanguage language) {
