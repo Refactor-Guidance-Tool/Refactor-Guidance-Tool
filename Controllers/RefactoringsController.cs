@@ -47,8 +47,8 @@ public class RefactoringsController : ControllerBase {
 		return null;
 	}
 
-	private record GetSettingsResponse(IReadOnlyList<Setting> Settings) {
-		[Required] public IReadOnlyList<Setting> Settings { get; } = Settings;
+	private record GetSettingsResponse(IReadOnlyList<SettingDto> Settings) {
+		[Required] public IReadOnlyList<SettingDto> Settings { get; } = Settings;
 	}
 
 	[HttpGet]
@@ -57,7 +57,12 @@ public class RefactoringsController : ControllerBase {
 	public IActionResult GetSettings(string refactoringId, [Required] ProjectLanguage projectLanguage) {
 		var refactoringProvider = this._refactoringProviders[projectLanguage];
 		var refactoring = refactoringProvider.GetRefactoring(refactoringId);
-		var settings = refactoring.GetSettings();
+		var settings = refactoring.GetSettings().Select((setting, i) => {
+			var dto = new SettingDto();
+			setting.FillDTO(dto);
+
+			return dto;
+		});
 
 		return this.Ok(settings);
 	}
