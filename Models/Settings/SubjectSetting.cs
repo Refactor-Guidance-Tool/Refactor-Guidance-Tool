@@ -3,7 +3,7 @@
 public class SubjectSetting : Setting {
 	public string CodeElementType { get; }
 
-	public SubjectSetting(string name, string codeElementType, bool required = true) : base("subject", name, required) {
+	public SubjectSetting(string identifier, string name, string codeElementType, bool required = true) : base("subject", name, identifier, required) {
 		this.CodeElementType = codeElementType;
 	}
 

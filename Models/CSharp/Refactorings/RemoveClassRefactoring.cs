@@ -19,7 +19,7 @@ public class RemoveClassRefactoring : Refactoring {
 
 	public override IReadOnlyList<Setting> GetSettings() {
 		return new List<Setting>() {
-			new SubjectSetting("Class to remove", "Class"),
+			new SubjectSetting("className", "Class to remove", "Class"),
 		};
 	}
 
