@@ -8,7 +8,6 @@ public class RemoveClassRefactoring : Refactoring {
 
 	public override IReadOnlyList<Hazard> GetHazards(Project project, Dictionary<string, string> settings) {
 		var className = settings["className"];
-		var packageName = settings["packageName"];
 		
 		var detectorResults = this.CodeQlBroker.RunDetectors(project.Uuid, project.ProjectLanguage, "RemoveClass", s => s
 				.Replace("$CLASS", className))
