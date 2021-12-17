@@ -28,18 +28,24 @@ public class RefactoringsController : ControllerBase {
 		[Required] public IReadOnlyList<Hazard> Hazards { get; } = Hazards;
 	}
 
-	[HttpPost]
+	[HttpGet]
 	[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetHazardsResponse))]
 	[ProducesResponseType(StatusCodes.Status404NotFound)]
 	[Route("{refactoringId}/hazards")]
-	public IActionResult GetHazards(string refactoringId, [Required] string projectId,
-		Dictionary<string, string> settings) {
+	public IActionResult GetHazards(string refactoringId, [Required] string projectId, string settings) {
 		var projectResult = this._projectStore.GetProjectByUuid(projectId);
 
 		return projectResult.Match<IActionResult>(project => {
+			var convertedSettings = new Dictionary<string, string>();
+			settings
+				.Split(',')
+				.Select(setting => setting.Split('='))
+				.ToList()
+				.ForEach(setting => convertedSettings.Add(setting[0], setting[1]));
+
 			var refactoringProvider = this._refactoringProviders[project.ProjectLanguage];
 			var refactoring = refactoringProvider.GetRefactoring(refactoringId);
-			var hazards = refactoring.GetHazards(project, settings);
+			var hazards = refactoring.GetHazards(project, convertedSettings);
 
 			return this.Ok(hazards);
 		}, projectNotFound => this.NotFound());
