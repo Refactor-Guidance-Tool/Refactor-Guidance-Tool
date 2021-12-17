@@ -11,7 +11,6 @@ public class RemoveClassRefactoring : Refactoring {
 		var packageName = settings["packageName"];
 		
 		var detectorResults = this.CodeQlBroker.RunDetectors(project.Uuid, project.ProjectLanguage, "RemoveClass", s => s
-				.Replace("$CLASS_PACKAGE", packageName)
 				.Replace("$CLASS", className))
 			.Select(result => new Hazard(result))
 			.ToList();
