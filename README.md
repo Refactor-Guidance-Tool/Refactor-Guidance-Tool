@@ -31,6 +31,27 @@ All set! Now you can open up the Swagger panel:
 http://localhost:1337/Swagger
 ```
 
+## Implementing a microstep
+All microsteps are defined in the `Detectors` folder. Their path follows the convention of `./Detectors/{Language}/Base/{Microstep}/`. 
+A microstep is a folder containing it's detectors, configured with [CodeQL's query language](https://codeql.github.com/docs/writing-codeql-queries/codeql-queries/).
+
+A detector followes the convention of ```
+/**
+ * @id isa-lab/detectors/{Language}/{Microstep}/{HazardName}
+ * @kind problem
+ * @name {HazardName}: <DESCRIPTION OF HAZARD>.
+ * @description <DESCRIPTION OF CODEQL QUERY>.
+ */
+
+import java
+
+from subject
+where predicate
+select subject, "Description of problem " + subjectAsString
+```
+  
+In a detector variables can be used by prepending them the captialized word with a $, such as $CLASS. A refactoring can then replace that string with the actual variable.
+  
 ## License
 
 Yes
