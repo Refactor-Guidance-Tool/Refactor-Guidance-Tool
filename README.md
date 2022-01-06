@@ -35,7 +35,8 @@ http://localhost:1337/Swagger
 All microsteps are defined in the `Detectors` folder. Their path follows the convention of `./Detectors/{Language}/Base/{Microstep}/`. 
 A microstep is a folder containing it's detectors, configured with [CodeQL's query language](https://codeql.github.com/docs/writing-codeql-queries/codeql-queries/).
 
-A detector followes the convention of ```
+A detector followes the convention of 
+```
 /**
  * @id isa-lab/detectors/{Language}/{Microstep}/{HazardName}
  * @kind problem
