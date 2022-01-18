@@ -1,7 +1,7 @@
 ﻿FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /source
 
-COPY *.csproj .
+COPY RefactorGuidanceTool/*.csproj .
 RUN dotnet restore
 
 COPY . .
@@ -16,7 +16,7 @@ COPY --from=build /app .
 RUN mkdir -p /app/Output
 
 # copy over the detectors to use in the tool
-COPY Detectors /app/Detectors
+COPY RefactorGuidanceTool/Detectors /app/Detectors
 
 # update, and then install jdk, maven, wget and tar
 RUN apt-get update && \
